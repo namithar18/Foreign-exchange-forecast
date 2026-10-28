@@ -45,6 +45,15 @@ def create_fx_features(data, column):
     result[f"{column}_log_cube"] = log_price ** 3
     for window in [5, 10, 20, 60, 220]:
         result[f"{column}_log_ma{window}"] = log_price.rolling(window).mean()
+
+    # Stationary replacements for the price-level features: they describe the price
+    # relative to its own recent history, so their range does not drift over time.
+    for window in [5, 10, 20, 60, 220]:
+        result[f"{column}_dev_ma{window}"] = log_price - result[f"{column}_log_ma{window}"]
+    result[f"{column}_vol20"] = log_return.rolling(20).std()
+    result[f"{column}_vol60"] = log_return.rolling(60).std()
+    rolling_220 = log_price.rolling(220)
+    result[f"{column}_z220"] = (log_price - rolling_220.mean()) / rolling_220.std()
     return result
 
 def build_features_and_targets(pair_df):
@@ -85,3 +94,26 @@ def get_7_features(pair):
         f"{pair}_ret_ma5", f"{pair}_ret_ma10", f"{pair}_ret_ma20",
         f"{pair}_ret_ma60", f"{pair}_ret_ma120"
     ]
+
+def get_15_paper_features(pair):
+    # The paper's 15 features: the 7 plus raw log-price level terms.
+    return get_7_features(pair) + [
+        f"{pair}_log", f"{pair}_log_sq", f"{pair}_log_cube",
+        f"{pair}_log_ma5", f"{pair}_log_ma10", f"{pair}_log_ma20",
+        f"{pair}_log_ma60", f"{pair}_log_ma220"
+    ]
+
+def get_15_stationary_features(pair):
+    # Same size as the paper's set, with each level term replaced by a relative one.
+    return get_7_features(pair) + [
+        f"{pair}_dev_ma5", f"{pair}_dev_ma10", f"{pair}_dev_ma20",
+        f"{pair}_dev_ma60", f"{pair}_dev_ma220",
+        f"{pair}_vol20", f"{pair}_vol60", f"{pair}_z220"
+    ]
+
+def get_feature_sets(pair):
+    return {
+        "7": get_7_features(pair),
+        "15-paper": get_15_paper_features(pair),
+        "15-stationary": get_15_stationary_features(pair)
+    }
