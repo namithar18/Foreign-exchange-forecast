@@ -28,6 +28,7 @@ results/               result tables written by the notebooks
 | `05_final_results` | Collect and plot the saved results (no retraining) |
 | `06_macro_features` | Download and align FRED macro factors with publication lags |
 | `07_trading_backtest` | Long-or-cash backtest of the test-period direction forecasts |
+| `08_gru` | GRU recurrent network on 20-observation sequences, compared with the baselines and earlier models |
 
 ## Method
 
@@ -53,11 +54,12 @@ From the current files in `results/`:
 
 - **Classification:** validation selected the 15-paper features for both Random Forest and SVM. Test accuracy is 51–54% with balanced accuracy of about 0.48–0.53, beating the majority baseline for GBP/USD and USD/EUR but not USD/JPY. This is a weak directional signal at best.
 - **Regression:** every configuration's R² is close to zero or negative; no model clearly beats predicting the mean return. The 15-paper features make Random Forest unstable when prices leave the training range, which the 15-stationary set avoids.
+- **GRU:** validation selected the 15-stationary features for both tasks, and early stopping often chose 1–3 epochs, meaning the network began fitting noise almost immediately. Test accuracy is 45–53%, below the majority baseline for GBP/USD and USD/JPY; test R² is within ±0.01 of zero. The sequence model finds no more signal than the single-row models.
 - **Backtest:** the strategy beat buy-and-hold for all three pairs over the ~2-year test period, but this is a single short window with weak underlying accuracy, so it is not evidence of a reliable edge.
 
 ## Running
 
-Requires Python with `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn` and `jupyter`. Run the notebooks in order from the `notebooks/` folder: 01 → 02 → 06 → 03 → 04 → 05 → 07. Notebook 06 needs internet access to download the FRED series.
+Requires Python with `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `torch` and `jupyter`. Run the notebooks in order from the `notebooks/` folder: 01 → 02 → 06 → 03 → 04 → 05 → 07 → 08. Notebook 06 needs internet access to download the FRED series.
 
 ## Limitations
 
