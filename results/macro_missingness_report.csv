@@ -1,7 +1,7 @@
 feature,missing_count,missing_pct,first_non_missing,selection_status
 NASDAQ_log_return,0,0.0,2004-09-27,Selected for Primary Model
-SP500_log_return,3145,51.92,2016-10-18,Excluded (incomplete coverage)
-DOW_log_return,3145,51.92,2016-10-18,Excluded (incomplete coverage)
+SP500_log_return,3154,54.86,2016-10-31,Excluded (incomplete coverage)
+DOW_log_return,3154,54.86,2016-10-31,Excluded (incomplete coverage)
 CPI_mom_pct_change,0,0.0,2004-09-27,Selected for Primary Model
 FEDFUNDS_rate,0,0.0,2004-09-27,Selected for Primary Model
 NBER_recession,0,0.0,2004-09-27,Selected for Primary Model

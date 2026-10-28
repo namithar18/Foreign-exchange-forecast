@@ -24,6 +24,10 @@ def build_pair_rates(forex_df):
         raise ValueError("Duplicate date/currency records found; inspect the source data.")
     wide = target.pivot(index="date", columns="currency", values="exchange_rate").sort_index()
     complete = wide.dropna(subset=["GBP", "USD", "JPY"]).copy()
+    # The source adds weekend quotes from 2023-10-28 onward. They carry near-zero
+    # returns and never occur in the training period, so keep weekdays only and let
+    # the weekend move fall into Monday's return.
+    complete = complete[complete.index.dayofweek < 5]
     complete["GBP_USD"] = complete["USD"] / complete["GBP"]
     complete["USD_EUR"] = 1 / complete["USD"]
     complete["USD_JPY"] = complete["JPY"] / complete["USD"]

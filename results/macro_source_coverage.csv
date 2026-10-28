@@ -1,8 +1,8 @@
 factor,series_id,status,first_valid_date,last_valid_date,observations_total,observations_in_FX_window,overlap_start,overlap_end,notes
-SP500,SP500,Available,2016-10-17,2026-10-16,2514,2509,2016-10-17,2026-10-09,10-yr FRED rolling window (missing 2004-2016)
+SP500,SP500,Available,2016-10-28,2026-10-27,2512,2500,2016-10-28,2026-10-09,10-yr FRED rolling window (missing 2004-2016)
 SP100,OEX,Unavailable,,,0,0,,,Could not download OEX: HTTP Error 404: Not Found
-NASDAQ,NASDAQCOM,Available,1971-02-05,2026-10-15,14042,5546,2004-09-27,2026-10-09,Full historical coverage
-DOW,DJIA,Available,2016-10-17,2026-10-16,2514,2509,2016-10-17,2026-10-09,10-yr FRED rolling window (missing 2004-2016)
+NASDAQ,NASDAQCOM,Available,1971-02-05,2026-10-27,14050,5546,2004-09-27,2026-10-09,Full historical coverage
+DOW,DJIA,Available,2016-10-28,2026-10-27,2512,2500,2016-10-28,2026-10-09,10-yr FRED rolling window (missing 2004-2016)
 CPI,CPIAUCSL,Available,1947-01-01,2026-09-01,956,263,2004-10-01,2026-09-01,Full historical coverage
 FEDFUNDS,FEDFUNDS,Available,1954-07-01,2026-09-01,867,264,2004-10-01,2026-09-01,Full historical coverage
 RECESSION,USREC,Available,1854-12-01,2026-09-01,2062,264,2004-10-01,2026-09-01,Full historical coverage
