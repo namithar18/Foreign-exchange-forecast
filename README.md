@@ -50,7 +50,15 @@ results/               result tables written by the notebooks
 
 ## Results summary
 
-From the current files in `results/`:
+From the current files in `results/`. Each model uses the feature set chosen on validation (Random Forest and SVM: 15-paper; SVR: 15-paper; GRU: 15-stationary).
+
+| Test set | Majority baseline | Random Forest | SVM-RBF | GRU | SVR R² | GRU R² |
+|---|---|---|---|---|---|---|
+| GBP/USD | 50.5% | 52.4% | 51.2% | 45.2% | +0.0106 | +0.0008 |
+| USD/EUR | 47.6% | 52.6% | 51.0% | 49.9% | -0.0224 | -0.0044 |
+| USD/JPY | 55.7% | 51.2% | 53.5% | 52.6% | -0.0794 | -0.0073 |
+
+Accuracy columns are next-day direction; R² columns are next-day return regression (0 = no better than predicting the mean return).
 
 - **Classification:** validation selected the 15-paper features for both Random Forest and SVM. Test accuracy is 51–54% with balanced accuracy of about 0.48–0.53, beating the majority baseline for GBP/USD and USD/EUR but not USD/JPY. This is a weak directional signal at best.
 - **Regression:** every configuration's R² is close to zero or negative; no model clearly beats predicting the mean return. The 15-paper features make Random Forest unstable when prices leave the training range, which the 15-stationary set avoids.
@@ -66,3 +74,8 @@ Requires Python with `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`,
 - Different data source and period from the paper, so comparisons with its figures are indicative only.
 - Macro factors use calendar publication lags rather than true point-in-time vintages.
 - The backtest is illustrative: one pair at a time, no shorting, leverage, spreads beyond the modelled cost, or market impact.
+- GRU results come from a single random seed and fixed settings (20-observation window, 32 hidden units), so they carry extra run-to-run variance.
+
+## Next steps
+
+- Add the macro factors from notebook 06 to the classification, regression and GRU models, and compare each feature set with and without them on validation.
