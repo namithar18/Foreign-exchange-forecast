@@ -7,6 +7,10 @@ DATA_DIR = PROJECT_ROOT / "data"
 PROCESSED_DIR = DATA_DIR / "processed"
 RESULTS_DIR = PROJECT_ROOT / "results"
 PAIRS = ["GBP_USD", "USD_EUR", "USD_JPY"]
+MACRO_FEATURES = [
+    "NASDAQ_log_return_lag1", "CPI_mom_pct_change", "FEDFUNDS_rate",
+    "NBER_recession", "Federal_debt_qoq_log_growth"
+]
 
 def load_forex_data(path=None):
     path = Path(path) if path else DATA_DIR / "daily_forex_rates.csv"
@@ -115,9 +119,36 @@ def get_15_stationary_features(pair):
         f"{pair}_vol20", f"{pair}_vol60", f"{pair}_z220"
     ]
 
-def get_feature_sets(pair):
-    return {
+def get_feature_sets(pair, with_macro=False):
+    sets = {
         "7": get_7_features(pair),
         "15-paper": get_15_paper_features(pair),
         "15-stationary": get_15_stationary_features(pair)
     }
+    if with_macro:
+        sets.update({f"{name}+macro": cols + MACRO_FEATURES for name, cols in list(sets.items())})
+    return sets
+
+def create_macro_features(macro_df):
+    # Model-ready versions of the factors aligned in notebook 06.
+    result = pd.DataFrame(index=macro_df.index)
+    # US equities close after the European FX fixing, so only the previous close is known.
+    result["NASDAQ_log_return_lag1"] = macro_df["NASDAQ_log_return"].shift(1)
+    result["CPI_mom_pct_change"] = macro_df["CPI_mom_pct_change"]
+    result["FEDFUNDS_rate"] = macro_df["FEDFUNDS_rate"]
+    result["NBER_recession"] = macro_df["NBER_recession"]
+    # Debt trends upward, so its level acts as a time stamp; use growth between releases.
+    debt = macro_df["Federal_debt_millions_usd"]
+    previous_release = debt.shift().where(debt.ne(debt.shift())).ffill()
+    result["Federal_debt_qoq_log_growth"] = np.log(debt / previous_release)
+    return result[MACRO_FEATURES]
+
+def load_model_data(pair):
+    # Pair dataset from notebook 02 joined with the macro factors from notebook 06.
+    data = pd.read_csv(PROCESSED_DIR / f"{pair}_model_data.csv", index_col=0, parse_dates=True)
+    macro = pd.read_csv(PROCESSED_DIR / "macro_features_daily.csv", index_col=0, parse_dates=True)
+    data = data.join(create_macro_features(macro), how="left")
+    missing = data[MACRO_FEATURES].isna().sum()
+    if missing.any():
+        raise ValueError(f"Missing macro values after alignment; re-run notebook 06:\n{missing[missing > 0]}")
+    return data

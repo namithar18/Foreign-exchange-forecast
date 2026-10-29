@@ -44,7 +44,17 @@ results/               result tables written by the notebooks
 
 **Evaluation.** A chronological 80/10/10 train/validation/test split with no shuffling. Models and feature sets are compared on validation only; the chosen configuration is refit on train + validation and scored once on test against a baseline (majority class for classification, training-mean return for regression).
 
-**Macro factors.** NASDAQ log return, CPI month-over-month change, Federal Funds rate, NBER recession indicator and federal debt, each shifted by its publication lag and forward-filled only. S&P 500 and Dow Jones are excluded because public FRED only provides their last 10 years; S&P 100 is no longer available. The aligned dataset is saved to `data/processed/master_fx_macro_dataset.csv` but is not yet used by the models.
+**Macro factors.** Notebook 06 downloads US series from FRED (Federal Reserve Economic Data), shifts each by its publication lag, and forward-fills them onto the FX dates (never backward-filled). `fx_utils.create_macro_features` then makes five model-ready features:
+
+| Feature | FRED series | Transformation |
+|---|---|---|
+| `NASDAQ_log_return_lag1` | `NASDAQCOM` (daily) | Daily log return, lagged one day because US markets close after the European FX fixing |
+| `CPI_mom_pct_change` | `CPIAUCSL` (monthly) | Month-over-month % change, available 1 month + 15 days after the reference month |
+| `FEDFUNDS_rate` | `FEDFUNDS` (monthly) | Effective rate level, available 1 month later |
+| `NBER_recession` | `USREC` (monthly) | 1 during a US recession, otherwise 0; available 1 month later |
+| `Federal_debt_qoq_log_growth` | `GFDEBTN` (quarterly) | Log growth since the previous release, available 4 months after the quarter starts; the raw level is not used because it trends upward and would act as a time stamp |
+
+S&P 500 and Dow Jones are excluded because public FRED only provides their last 10 years; S&P 100 is no longer available. Notebooks 03, 04 and 08 compare each FX feature set with and without these five factors (`7+macro`, `15-paper+macro`, `15-stationary+macro`), and Notebook 05 summarises the difference.
 
 **Backtest.** Hold the pair when the Random Forest predicts a rise, otherwise hold cash; 2 bps cost per position change; compared with buy-and-hold and cash over the test period.
 
@@ -63,19 +73,17 @@ Accuracy columns are next-day direction; R² columns are next-day return regress
 - **Classification:** validation selected the 15-paper features for both Random Forest and SVM. Test accuracy is 51–54% with balanced accuracy of about 0.48–0.53, beating the majority baseline for GBP/USD and USD/EUR but not USD/JPY. This is a weak directional signal at best.
 - **Regression:** every configuration's R² is close to zero or negative; no model clearly beats predicting the mean return. The 15-paper features make Random Forest unstable when prices leave the training range, which the 15-stationary set avoids.
 - **GRU:** validation selected the 15-stationary features for both tasks, and early stopping often chose 1–3 epochs, meaning the network began fitting noise almost immediately. Test accuracy is 45–53%, below the majority baseline for GBP/USD and USD/JPY; test R² is within ±0.01 of zero. The sequence model finds no more signal than the single-row models.
+- **Macro factors:** adding them changed mean validation balanced accuracy by between −0.018 and +0.012 and made validation RMSE slightly worse for most regression models. Validation never selected a `+macro` feature set for any model, so the test results above are unchanged by them. At a daily horizon, slow-moving US-only macro data adds no detectable signal.
 - **Backtest:** the strategy beat buy-and-hold for all three pairs over the ~2-year test period, but this is a single short window with weak underlying accuracy, so it is not evidence of a reliable edge.
 
 ## Running
 
-Requires Python with `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `torch` and `jupyter`. Run the notebooks in order from the `notebooks/` folder: 01 → 02 → 06 → 03 → 04 → 05 → 07 → 08. Notebook 06 needs internet access to download the FRED series.
+Requires Python with `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `torch` and `jupyter`. Run the notebooks in order from the `notebooks/` folder: 01 → 02 → 06 → 03 → 04 → 08 → 05 → 07. Notebook 06 needs internet access to download the FRED series.
 
 ## Limitations
 
 - Different data source and period from the paper, so comparisons with its figures are indicative only.
-- Macro factors use calendar publication lags rather than true point-in-time vintages.
+- Macro factors use calendar publication lags rather than true point-in-time vintages. NBER recession dates in particular are announced many months after the fact, so the recession flag uses information that was not available in real time (it is 0 throughout validation and test, so this affects training only).
+- The macro factors are US-only; exchange rates respond to differences between two economies (e.g. US vs UK interest rates), which these features do not capture.
 - The backtest is illustrative: one pair at a time, no shorting, leverage, spreads beyond the modelled cost, or market impact.
 - GRU results come from a single random seed and fixed settings (20-observation window, 32 hidden units), so they carry extra run-to-run variance.
-
-## Next steps
-
-- Add the macro factors from notebook 06 to the classification, regression and GRU models, and compare each feature set with and without them on validation.
